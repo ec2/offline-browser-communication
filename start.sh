@@ -8,9 +8,10 @@ sn=xyz
 tmux new-session -s "$sn" -n etc -d
 
 # Create a bunch of windows in /var/log
-for i in {0..20}; do
+for i in $(eval echo {0..$1}) ; do
         tmux new-window -t "$sn:$i" -n "var$i" go run *.go $((5000+$i))
 done
+
 
 # Select window #1 and attach to the session
 tmux select-window -t "$sn:1"
