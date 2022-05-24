@@ -13,7 +13,7 @@ import (
 )
 
 const remoteDescriptionTemplate = `v=0
-o=- 6920920643910646739 2 IN IP4 127.0.0.1
+o=- 6920920643910646739 2 IN IP4 0.0.0.0
 s=-
 t=0 0
 a=group:BUNDLE 0
