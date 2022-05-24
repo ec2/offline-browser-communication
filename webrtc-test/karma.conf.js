@@ -1,4 +1,5 @@
 const testFile = process.env.TEST_FILE
+const browser = process.env.BROWSER
 
 module.exports = function(config) {
   config.set({
@@ -10,8 +11,15 @@ module.exports = function(config) {
       '*.mjs': ['webpack']
     },
     webpack: {},
+    browserConsoleLogOptions: {
+      level: 'log'
+    },
+    client : {
+        captureConsole : true
+    },
+    logLevel: config.LOG_INFO,
     reporters: ["progress"],
-    browsers: ["ChromeHeadless"],
+    browsers: [browser],
     singleRun: true,
   });
 };

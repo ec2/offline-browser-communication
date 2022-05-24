@@ -1,6 +1,5 @@
-export async function connect(ip, port) {
+export async function connect(ip, port, log = console.log) {
   const pc = new RTCPeerConnection()
-  const log = console.log
 
   pc.oniceconnectionstatechange = _ => log(`${ip}:${port} ${pc.iceConnectionState}`)
 
