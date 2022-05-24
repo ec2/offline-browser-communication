@@ -5,6 +5,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strconv"
 
 	"github.com/pion/ice/v2"
 	"github.com/pion/webrtc/v3"
@@ -27,6 +29,12 @@ a=sctp-port:5000
 `
 
 func main() {
+	if len(os.Args) != 2 {
+		panic("must have only 1 arg: listening port number")
+	}
+	port, err := strconv.Atoi(os.Args[1])
+	panicIfErr(err)
+	fmt.Printf("Running on port: %d\n", uint16(port))
 	s := webrtc.SettingEngine{}
 
 	// Generate mDNS Candidates and set a static local hostname
@@ -34,7 +42,7 @@ func main() {
 	s.SetMulticastDNSHostName("offline-browser-communication.local")
 
 	// Set a small number of pre-determined ports we listen for ICE traffic on
-	panicIfErr(s.SetEphemeralUDPPortRange(5000, 5005))
+	panicIfErr(s.SetEphemeralUDPPortRange(uint16(port), uint16(port)))
 
 	// Disable DTLS Certificate Verification. Currently we aren't able to use stored certificate in the browser
 	s.DisableCertificateFingerprintVerification(true)
@@ -55,6 +63,9 @@ func main() {
 		})
 
 		d.OnMessage(func(m webrtc.DataChannelMessage) {
+			// Echos the received payload back to the sender
+			err := d.Send(m.Data)
+			panicIfErr(err)
 			fmt.Printf("%s \n", m.Data)
 		})
 	})
