@@ -8,6 +8,6 @@ describe('connect to one server', () => {
     this.timeout(10_000)
     const {pc, dataChannel} = await connect('0.0.0.0', 5000)
     await sleep(3000)
-    expect(pc.connectionState, 'connection state is incorrect').to.equal('connected')
+    expect(pc.iceConnectionState, 'connection state is incorrect').to.equal('connected')
   })
 })
