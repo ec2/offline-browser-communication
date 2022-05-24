@@ -1,18 +1,16 @@
 #!/bin/bash
-# var for session name (to avoid repeated occurences)
-sn=xyz
 
-# Start the session and window 0 in /etc
-#   This will also be the default cwd for new windows created
-#   via a binding unless overridden with default-path.
-tmux new-session -s "$sn" -n etc -d
+for i in $(eval echo {1..$1}); do {
+  echo "Process Server \"$i\" started";
+  go run *.go $((5000+i)) & pid=$!
+  PID_LIST+=" $pid";
+} done
 
-# Create a bunch of windows in /var/log
-for i in $(eval echo {0..$1}) ; do
-        tmux new-window -t "$sn:$i" -n "var$i" go run *.go $((5000+$i))
-done
+trap "kill $PID_LIST" SIGINT
 
+echo "Parallel processes have started";
 
-# Select window #1 and attach to the session
-tmux select-window -t "$sn:1"
-tmux -2 attach-session -t "$sn"
+wait $PID_LIST
+
+echo
+echo "All processes have completed";
