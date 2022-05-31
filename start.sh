@@ -2,7 +2,7 @@
 
 for i in $(eval echo {1..$1}); do {
   echo "Process Server \"$i\" started";
-  go run *.go $((5000+i)) & pid=$!
+  go run *.go $((5000+i-1)) & pid=$!
   PID_LIST+=" $pid";
 } done
 

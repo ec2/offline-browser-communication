@@ -8,8 +8,16 @@ export async function connect(ip, port, log = console.log) {
   dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`)
   dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`)
   dataChannel.onmessage = e => {
-    log(`Message from ${ip}:${port} payload '${String.fromCharCode.apply(null, new Uint8Array(e.data))}'`)
+    // log(`Message from ${ip}:${port} payload '${String.fromCharCode.apply(null, new Uint8Array(e.data))}'`)
   }
+  dataChannel.onerror = e => {
+    log(e)
+  }
+
+  // dataChannel.onbufferedamountlow = e => { 
+  //   log(`Buffer low event ${e}`)
+  // };
+
 
   const answer = `v=0
 o=- 521628857 1575883112 IN IP4 ${ip}

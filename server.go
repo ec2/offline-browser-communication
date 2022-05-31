@@ -66,7 +66,7 @@ func main() {
 			// Echos the received payload back to the sender
 			err := d.Send(m.Data)
 			panicIfErr(err)
-			fmt.Printf("%s \n", m.Data)
+			// fmt.Printf("Go: %s \n", m.Data)
 		})
 	})
 

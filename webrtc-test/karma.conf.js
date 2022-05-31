@@ -21,5 +21,6 @@ module.exports = function(config) {
     reporters: ["progress"],
     browsers: [browser],
     singleRun: true,
+    browserNoActivityTimeout: 600000,
   });
 };
