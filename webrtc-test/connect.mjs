@@ -1,19 +1,25 @@
-export async function connect_plexed(ip, port, num_channels, log = console.log) {
-  const pc = new RTCPeerConnection()
-  pc.oniceconnectionstatechange = _ => log(`${ip}:${port} ${pc.iceConnectionState}`)
+export async function connect_plexed(
+  ip,
+  port,
+  num_channels,
+  log = console.log
+) {
+  const pc = new RTCPeerConnection();
+  pc.oniceconnectionstatechange = (_) =>
+    log(`${ip}:${port} ${pc.iceConnectionState}`);
   let dataChannels = [];
-  for (let i = 0 ; i < num_channels ; i++) {
-    const dataChannel = pc.createDataChannel(`${port}:${i}`)
-    dataChannel.binaryType = 'arraybuffer'
-    dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`)
-    dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`)
-    dataChannel.onmessage = e => {
+  for (let i = 0; i < num_channels; i++) {
+    const dataChannel = pc.createDataChannel(`${port}:${i}`);
+    dataChannel.binaryType = "arraybuffer";
+    dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`);
+    dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`);
+    dataChannel.onmessage = (e) => {
       // log(`Message from ${ip}:${port} payload '${String.fromCharCode.apply(null, new Uint8Array(e.data))}'`)
-    }
-    dataChannel.onerror = e => {
-      log(e)
-    }
-    dataChannel.bufferedAmountLowThreshold = 65535
+    };
+    dataChannel.onerror = (e) => {
+      log(e);
+    };
+    dataChannel.bufferedAmountLowThreshold = 65535;
     dataChannels.push(dataChannel);
   }
   const answer = `v=0
@@ -33,42 +39,52 @@ a=ice-ufrag:fKVhbscsMWDGAnBg
 a=ice-pwd:xGjQkAvKIVkBeVTGWcvCQtnVAeapczwa
 a=candidate:foundation 1 udp 2130706431 ${ip} ${port} typ host generation 0
 a=end-of-candidates
-`
-  
-    pc.onnegotiationneeded = _ =>
-      pc.createOffer().then(d => {
-        if (!d.sdp) throw new Error("sdp must be defined")
-        d.sdp = d.sdp.replace(/^a=ice-ufrag.*$/m, 'a=ice-ufrag:V6j+')
-        d.sdp = d.sdp.replace(/^a=ice-pwd.*$/m, 'a=ice-pwd:OEKutPgoHVk/99FfqPOf444w')
-        void pc.setLocalDescription(d).catch((o) => log('offer err', o))
-        void pc.setRemoteDescription(new RTCSessionDescription({type: "answer",  sdp: answer})).catch((o) => log('answer err', o))
-      }).catch(log)
+`;
+
+  pc.onnegotiationneeded = (_) =>
+    pc
+      .createOffer()
+      .then((d) => {
+        if (!d.sdp) throw new Error("sdp must be defined");
+        d.sdp = d.sdp.replace(/^a=ice-ufrag.*$/m, "a=ice-ufrag:V6j+");
+        d.sdp = d.sdp.replace(
+          /^a=ice-pwd.*$/m,
+          "a=ice-pwd:OEKutPgoHVk/99FfqPOf444w"
+        );
+        void pc.setLocalDescription(d).catch((o) => log("offer err", o));
+        void pc
+          .setRemoteDescription(
+            new RTCSessionDescription({ type: "answer", sdp: answer })
+          )
+          .catch((o) => log("answer err", o));
+      })
+      .catch(log);
 
   return {
     pc,
     dataChannels,
-  }
+  };
 }
 export async function connect(ip, port, log = console.log) {
-  const pc = new RTCPeerConnection()
+  const pc = new RTCPeerConnection();
 
-  pc.oniceconnectionstatechange = _ => log(`${ip}:${port} ${pc.iceConnectionState}`)
+  pc.oniceconnectionstatechange = (_) =>
+    log(`${ip}:${port} ${pc.iceConnectionState}`);
 
-  const dataChannel = pc.createDataChannel('foo')
-  dataChannel.binaryType = 'arraybuffer'
-  dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`)
-  dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`)
-  dataChannel.onmessage = e => {
+  const dataChannel = pc.createDataChannel("foo");
+  dataChannel.binaryType = "arraybuffer";
+  dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`);
+  dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`);
+  dataChannel.onmessage = (e) => {
     // log(`Message from ${ip}:${port} payload '${String.fromCharCode.apply(null, new Uint8Array(e.data))}'`)
-  }
-  dataChannel.onerror = e => {
-    log(e)
-  }
+  };
+  dataChannel.onerror = (e) => {
+    log(e);
+  };
 
-  // dataChannel.onbufferedamountlow = e => { 
+  // dataChannel.onbufferedamountlow = e => {
   //   log(`Buffer low event ${e}`)
   // };
-
 
   const answer = `v=0
 o=- 521628857 1575883112 IN IP4 ${ip}
@@ -87,19 +103,29 @@ a=ice-ufrag:fKVhbscsMWDGAnBg
 a=ice-pwd:xGjQkAvKIVkBeVTGWcvCQtnVAeapczwa
 a=candidate:foundation 1 udp 2130706431 ${ip} ${port} typ host generation 0
 a=end-of-candidates
-`
+`;
 
-  pc.onnegotiationneeded = _ =>
-    pc.createOffer().then(d => {
-      if (!d.sdp) throw new Error("sdp must be defined")
-      d.sdp = d.sdp.replace(/^a=ice-ufrag.*$/m, 'a=ice-ufrag:V6j+')
-      d.sdp = d.sdp.replace(/^a=ice-pwd.*$/m, 'a=ice-pwd:OEKutPgoHVk/99FfqPOf444w')
-      void pc.setLocalDescription(d).catch((o) => log('offer err', o))
-      void pc.setRemoteDescription(new RTCSessionDescription({type: "answer",  sdp: answer})).catch((o) => log('answer err', o))
-    }).catch(log)
+  pc.onnegotiationneeded = (_) =>
+    pc
+      .createOffer()
+      .then((d) => {
+        if (!d.sdp) throw new Error("sdp must be defined");
+        d.sdp = d.sdp.replace(/^a=ice-ufrag.*$/m, "a=ice-ufrag:V6j+");
+        d.sdp = d.sdp.replace(
+          /^a=ice-pwd.*$/m,
+          "a=ice-pwd:OEKutPgoHVk/99FfqPOf444w"
+        );
+        void pc.setLocalDescription(d).catch((o) => log("offer err", o));
+        void pc
+          .setRemoteDescription(
+            new RTCSessionDescription({ type: "answer", sdp: answer })
+          )
+          .catch((o) => log("answer err", o));
+      })
+      .catch(log);
 
   return {
     pc,
     dataChannel,
-  }
+  };
 }

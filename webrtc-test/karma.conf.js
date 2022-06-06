@@ -1,21 +1,19 @@
-const testFile = process.env.TEST_FILE
-const browser = process.env.BROWSER
+const testFile = process.env.TEST_FILE;
+const browser = process.env.BROWSER;
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
     frameworks: ["mocha", "chai", "webpack"],
-    files: [
-      testFile
-    ],
+    files: [testFile],
     preprocessors: {
-      '*.mjs': ['webpack']
+      "*.mjs": ["webpack"],
     },
     webpack: {},
     browserConsoleLogOptions: {
-      level: 'log'
+      level: "log",
     },
-    client : {
-        captureConsole : true
+    client: {
+      captureConsole: true,
     },
     colors: false,
     logLevel: config.LOG_INFO,
