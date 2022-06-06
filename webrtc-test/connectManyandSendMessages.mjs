@@ -14,7 +14,7 @@ function generate_static_data(size) {
 
 let msgToSend = null;
 let numMessages = 0;
-let numConnection = 50; 
+let numConnection = 20; 
 let res = 0;
 let peerConnAndDataChan = [];
 let msgsSent = Array(numConnection).fill(0);;
@@ -54,10 +54,10 @@ async function sendPayloads(numMesssagesPerConn, payloadSize) {
     }
   }
 
-  await Promise.all(peerConnAndDataChan.map( async (v, n) =>{
+  await Promise.all(peerConnAndDataChan.map( async (v, n) => {
     let pc = v.pc
     let dc = v.dc
-    await send(n, dc)
+    return send(n, dc)
   }));
 
   // wait for all the messages that we sent to be echoed back
@@ -78,14 +78,14 @@ async function sendPayloads(numMesssagesPerConn, payloadSize) {
 describe(`connect to ${numConnection} servers and send messages`, () => {
   before (async function () {
     console.log(`Connecting to all ${numConnection} servers`)
-    this.timeout(10_000)
+    this.timeout(100_000)
     let peerConnections = []
     for (let i = 0 ; i < numConnection ; i++) {
       // remote
-      const {pc, dataChannel} = await connect('15.223.38.243', 5000+i)
+      // const {pc, dataChannel} = await connect('15.223.38.243', 5000+i)
 
       // local
-      // const {pc, dataChannel} = await connect('192.168.1.8', 5000+i)
+      const {pc, dataChannel} = await connect('192.168.1.8', 5000+i)
       peerConnections.push(pc)
       dataChannel.onmessage = e => {
         if (msgToSend.byteLength == String.fromCharCode.apply(null, new Uint8Array(e.data)).length) {
@@ -99,9 +99,9 @@ describe(`connect to ${numConnection} servers and send messages`, () => {
       }
       peerConnAndDataChan.push({pc: pc, dc: dataChannel})
     }
-    await sleep(4000)
+    await sleep(30000)
     peerConnections.forEach((pc, _) => {
-        expect(pc.iceConnectionState, 'connection state is incorrect').to.equal('connected')
+        expect(pc.iceConnectionState, 'connection state is incorrect').to.be.oneOf(['connected', 'completed'])
     }) 
     console.log(`Successfully connected to all ${numConnection} servers`)
   })

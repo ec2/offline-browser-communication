@@ -17,6 +17,7 @@ module.exports = function(config) {
     client : {
         captureConsole : true
     },
+    colors: false,
     logLevel: config.LOG_INFO,
     reporters: ["progress"],
     browsers: [browser],
