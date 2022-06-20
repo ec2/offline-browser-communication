@@ -19,7 +19,26 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     reporters: ["progress"],
     browsers: [browser],
+    customLaunchers: {
+      Firefox101: {
+          base: 'Firefox',
+          name: 'Firefox101',
+          command: '/Applications/Firefox101.app/Contents/MacOS/firefox-bin'
+      },
+      FirefoxDefaultHeadless: {
+        base: 'FirefoxHeadless',
+        prefs: {
+          'dom.min_background_timeout_value': 10000,
+          'dom.suspend_inactive.enabled': false,
+        }
+      },
+    },
     singleRun: true,
     browserNoActivityTimeout: 600000,
+    browserDisconnectTimeout: 20000,
+    flags: [
+      '--disable-gpu',
+      '--no-sandbox'
+  ],
   });
 };

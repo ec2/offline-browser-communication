@@ -4,22 +4,70 @@ export async function connect_plexed(
   num_channels,
   log = console.log
 ) {
+  let t0 = performance.now()
   const pc = new RTCPeerConnection();
   pc.oniceconnectionstatechange = (_) =>
     log(`${ip}:${port} ${pc.iceConnectionState}`);
+  // pc.totalBytesSent = 0;
+  // pc.totalBytesReceived = 0;
+  pc.bytesReceived = 0
+  pc.bytesSent = 0
+
+  pc.resetBandwidth = () => {
+    pc.send_points = []
+    pc.receive_points = []
+    pc.t0_receive = null
+    pc.t0_send = null
+  }
+  pc.resetBandwidth()
+
+  // calculate bandwith of each peerconnection
+  pc.getBandwidth = async () => {
+    const stats = await pc.getStats(null)
+    const stat = Array.from(stats.values()).find(r => r.type === 'candidate-pair')
+    const {bytesReceived, bytesSent} = stat
+    return {bytesReceived, bytesSent}
+  }
+  pc.bandwidth = () => {
+    const printBytes = async () => {
+      // let bps = (pc.totalBytesReceived *8) / ((t1-t0)/1000)
+      // console.log(`Node: ${port} Throughput download  ${bps/1024/1024}`)
+      try {
+        const {bytesReceived, bytesSent} = await pc.getBandwidth()
+        let t1 = performance.now()
+        if (pc.t0_receive != null) {
+          const mbpsDown = ((bytesReceived - pc.bytesReceived)*8) / ((t1 - pc.t0_receive)/1000) / 1024 / 1024
+          pc.receive_points.push(mbpsDown)
+        }
+        if (pc.t0_send != null) {
+          const mbpsUp = ((bytesSent - pc.bytesSent)*8) / ((t1 - pc.t0_send)/1000) / 1024 / 1024
+          pc.send_points.push(mbpsUp)
+        }
+      } catch (e) {
+        console.log(e)
+      }
+
+      setTimeout(printBytes, 200)
+    }
+    printBytes()
+  }
+  pc.bandwidth();
+
   let dataChannels = [];
   for (let i = 0; i < num_channels; i++) {
     const dataChannel = pc.createDataChannel(`${port}:${i}`);
     dataChannel.binaryType = "arraybuffer";
     dataChannel.onclose = () => log(`${ip}:${port} sendChannel has closed`);
-    dataChannel.onopen = () => log(`${ip}:${port} sendChannel has opened`);
+    dataChannel.onopen = () => {
+      log(`${ip}:${port} sendChannel has opened`)
+    };
     dataChannel.onmessage = (e) => {
       // log(`Message from ${ip}:${port} payload '${String.fromCharCode.apply(null, new Uint8Array(e.data))}'`)
     };
     dataChannel.onerror = (e) => {
       log(e);
     };
-    dataChannel.bufferedAmountLowThreshold = 65535;
+    dataChannel.bufferedAmountLowThreshold = 4096*1024;
     dataChannels.push(dataChannel);
   }
   const answer = `v=0

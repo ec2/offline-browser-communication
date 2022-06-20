@@ -36,6 +36,7 @@ let peerConnAndDataChan = [];
 let t1;
 let reported_data = [];
 const num_data_channels = 1;
+
 // let msgsSent = Array(numConnection).fill(Array(num_data_channels).fill(0));
 let msgsSent = Array.from({ length: numConnection }, (v, k) =>
   Array(num_data_channels).fill(0)
@@ -169,7 +170,7 @@ describe(`connect to ${numConnection} servers and send messages`, () => {
       );
       // local
       // const { pc, dataChannels } = await connect_plexed(
-      //   "192.168.0.62",
+      //   "192.168.51.254",
       //   5000 + i,
       //   num_data_channels
       // );
@@ -225,50 +226,90 @@ describe(`connect to ${numConnection} servers and send messages`, () => {
     })
   });
 
-    // Measuring Bandwidth
-    [
-      {msgCount: 200, msgSize: 8192},
-      {msgCount: 400, msgSize: 4096},
-      {msgCount: 800, msgSize: 2048},
-    ].forEach(({msgCount, msgSize}) => {
-      step(`send ${msgCount} messages of size ${msgSize} bytes`, async function () {
-        // messageSize = msgSize;
-        this.timeout(2_400_000);
-        await sendPayloads(msgCount, msgSize);
-      });
-    })
+// Measuring Ping
+[
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 100},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 800},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 1500},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 3000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 6000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+  {msgCount: 1, msgSize: 12000},
+].forEach(({msgCount, msgSize}) => {
+  step(`send ${msgCount} messages of size ${msgSize} bytes`, async function () {
+    // messageSize = msgSize;
+    this.timeout(2_400_000);
+    await sendPayloads(msgCount, msgSize);
+  });
+})
 
 
-
-
-  // 65535 bytes
-
-  // step('send 10 messages of size 65535 bytes', async function () {
-  //   this.timeout(600_000);
-  //   await sendPayloads(10, 65535);
-  // })
-  // step('send 20 messages of size 65535 bytes', async function () {
-  //   this.timeout(600_000);
-  //   await sendPayloads(20, 65535);
-  // })
-  // step('send 50 messages of size 65535 bytes', async function () {
-  //   this.timeout(600_000);
-  //   await sendPayloads(50, 65535);
-  // })
-  // step('send 100 messages of size 65535 bytes', async function () {
-  //   this.timeout(600_000);
-  //   await sendPayloads(100, 65535);
-  // })
 
   after(function () {
+    // msgSize => []rtt
+    const msgTypes = new Map()
+    reported_data.forEach(data => {
+      let rtts = msgTypes.get(data.payloadSize)
+      if (!rtts) {
+        rtts = []
+        msgTypes.set(data.payloadSize, rtts)
+      }
+      rtts.push(data.totalTimeRTT)
+    })
+
     console.log(
-      `| Payload Size (bytes) | Num Payloads Per Peer | 50th % Up (Mbps)|95th % Up (Mbps)|50th % Down (Mbps)|95th % Down (Mbps)|`
+      `| Payload Size (bytes) | RTT (p50) |  RTT (p95) |`
     );
     console.log(`|------|------|----------|-----|-----|-----|`);
-    reported_data.forEach((v, _) => {
-      console.log(
-        `|${v.payloadSize}|${v.payloadsPerPeer}|${v.mbpsUp._50th}|${v.mbpsUp._95th}|${v.mbpsDown._50th}|${v.mbpsDown._95th}|`
-      );
-    });
+    for (const [msgSize, rtts] of msgTypes.entries()) {
+      rtts.sort((a, b) => a - b)
+      // p50
+      const p50 = percentile(rtts, 0.5)
+      // p95
+      const p95 = percentile(rtts, 0.95)
+      
+      console.log(`${msgSize} | ${p50} | ${p95}`)
+    } 
   });
 });

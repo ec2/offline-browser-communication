@@ -27,6 +27,10 @@ a=setup:actpass
 a=mid:0
 a=sctp-port:5000
 `
+const (
+	bufferedAmountLowThreshold uint64 = 256 * 1024 // 256 KB
+	maxBufferedAmount          uint64 = 512 * 1024 // 1 MB
+)
 
 func main() {
 	if len(os.Args) != 2 {
@@ -58,16 +62,29 @@ func main() {
 	panicIfErr(err)
 
 	peerConnection.OnDataChannel(func(d *webrtc.DataChannel) {
+		sendMoreCh := make(chan struct{})
+
 		d.OnOpen(func() {
 			fmt.Printf("DataChannel %s has opened \n", d.Label())
 		})
 
 		d.OnMessage(func(m webrtc.DataChannelMessage) {
+			if d.BufferedAmount()+uint64(len(m.Data)) > maxBufferedAmount {
+				// Wait until the bufferedAmount becomes lower than the threshold
+				<-sendMoreCh
+			}
+
 			// Echos the received payload back to the sender
 			err := d.Send(m.Data)
 			panicIfErr(err)
 			// fmt.Printf("Go: %s \n", m.Data)
 		})
+
+		// This callback is made when the current bufferedAmount becomes lower than the threshold
+		d.OnBufferedAmountLow(func() {
+			sendMoreCh <- struct{}{}
+		})
+
 	})
 
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
